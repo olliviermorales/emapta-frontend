@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import LoadingSpinner from './LoadingSpinner';
 import { useDebounce } from 'use-debounce';
@@ -9,6 +9,15 @@ const SearchBar = ({ onSelectCountry }) => {
   const [debouncedQuery] = useDebounce(query, 500);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const filteredCountries = useMemo(() => {
+    if (debouncedQuery.length === 0) {
+      return [];
+    }
+    return suggestions.filter((country) =>
+      country.name.common.toLowerCase().includes(debouncedQuery.toLowerCase())
+    );
+  }, [suggestions, debouncedQuery]);
 
   useEffect(() => {
     if (debouncedQuery.length === 0) {
@@ -26,20 +35,15 @@ const SearchBar = ({ onSelectCountry }) => {
           `https://restcountries.com/v3.1/name/${debouncedQuery}`
         );
 
-        const filteredCountries = response.data.filter((country) =>
-          country.name.common
-            .toLowerCase()
-            .startsWith(debouncedQuery.toLowerCase())
-        );
-
-        if (filteredCountries.length === 0) {
+        if (response.data.length === 0) {
           setSuggestions([]);
-          setError('No countries found.');
+          setError('No results found.');
         } else {
-          setSuggestions(filteredCountries);
+          setSuggestions(response.data);
         }
       } catch (error) {
         setSuggestions([]);
+        setError('No results found.');
       } finally {
         setIsLoading(false);
       }
@@ -53,6 +57,7 @@ const SearchBar = ({ onSelectCountry }) => {
       <input
         type='text'
         placeholder='Search for a country...'
+        aria-label='Search for a country'
         className='w-full p-2 border border-gray-300 rounded'
         value={query}
         onChange={(e) => setQuery(e.target.value)}
@@ -62,10 +67,10 @@ const SearchBar = ({ onSelectCountry }) => {
           <LoadingSpinner />
         </div>
       )}
-      <p className='text-xs text-red-500'>{error}</p>
-      {suggestions.length > 0 && (
+      {error && <p className='text-xs text-red-500'>{error}</p>}
+      {filteredCountries.length > 0 && (
         <ul className='absolute z-10 w-full bg-white border border-gray-300 rounded mt-1 max-h-60 overflow-y-auto'>
-          {suggestions.map((country) => (
+          {filteredCountries.map((country) => (
             <li
               key={country.cca3}
               className='p-2 hover:bg-gray-100 cursor-pointer flex items-center justify-between'
