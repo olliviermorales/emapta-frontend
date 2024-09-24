@@ -14,20 +14,14 @@
 git clone https://github.com/yourusername/emapta-frontend.git
 ```
 
-2. **Switch to the develop branch:**
+2. **Install Dependencies:**
 
 ```bash
 cd emapta-frontend
-git checkout develop
-```
-
-3. **Install Dependencies:**
-
-```bash
 npm install
 ```
 
-4. **Run the Application:**
+3. **Run the Application:**
 
 ```bash
 npm start
